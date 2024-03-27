@@ -20,11 +20,15 @@
 #define VB_VISB "visb" // Visible light
 #define VB_INFR "infr" // Infrared
 #define VB_ULVI "ulvi" // UV index
-#define VB_GLAT "glat" // GPS Latitude (10^7)
-#define VB_GLON "glon" // GPS Longitude (10^-7)
+#define VB_GLAT "glat" // GPS Latitude (deg * 10^7)
+#define VB_GLON "glon" // GPS Longitude (deg * 10^-7)
 #define VB_GALT "galt" // GPS Altitude (mm)
 #define VB_GALM "galm" // GPS Altitude MSL (mm)
+#define VB_GRSP "grsp" // GPS Ground speed (mm/s)
+#define VB_GHED "ghed" // GPS Heading (deg * 10^-5)
 #define VB_GSIV "gsiv" // GPS SIV
+#define VB_GUXT "guxt" // GPS UNIX Epoch Time
+
 
 JsonDocument valbuf;
 
@@ -185,6 +189,9 @@ void gnssRefresh(void) {
   valbuf[VB_GLON] = gnss.getLongitude();
   valbuf[VB_GALT] = gnss.getAltitude();
   valbuf[VB_GALM] = gnss.getAltitudeMSL();
+  valbuf[VB_GRSP] = gnss.getGroundSpeed();
+  valbuf[VB_GHED] = gnss.getHeading();
+  valbuf[VB_GUXT] = gnss.getUnixEpoch();
   valbuf[VB_GSIV] = gnss.getSIV();
 }
 
