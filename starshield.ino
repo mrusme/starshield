@@ -1,6 +1,7 @@
 #include <bsec2.h>
 #include <Wire.h>
 #include <Adafruit_SI1145.h>
+#include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 #include <ArduinoJson.h>
 
 #define PANIC_LED   LED_BUILTIN
@@ -19,19 +20,29 @@
 #define VB_VISB "visb" // Visible light
 #define VB_INFR "infr" // Infrared
 #define VB_ULVI "ulvi" // UV index
+#define VB_GLAT "glat" // GPS Latitude (10^7)
+#define VB_GLON "glon" // GPS Longitude (10^-7)
+#define VB_GALT "galt" // GPS Altitude (mm)
+#define VB_GALM "galm" // GPS Altitude MSL (mm)
+#define VB_GSIV "gsiv" // GPS SIV
 
 JsonDocument valbuf;
 
 Bsec2 envSensor;
 Adafruit_SI1145 si1145;
+SFE_UBLOX_GNSS gnss;
 
 void err(void);
 
 void setupBsec(void);
 void setupSI(void);
+void setupGNSS(void);
 
 void bsecCheckStatus(Bsec2 bsec);
 void bsecDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
+
+void siRefresh(void);
+void gnssRefresh(void);
 
 void setup(void) {
   Serial.begin(115200);
@@ -40,6 +51,7 @@ void setup(void) {
 
   setupBsec();
   setupSI();
+  setupGNSS();
 }
 
 void setupBsec(void) {
@@ -74,11 +86,23 @@ void setupSI(void) {
   }
 }
 
+void setupGNSS(void) {
+  if(!gnss.begin()) {
+    valbuf[VB_ERR] = F("GNSS not found");
+    valbuf[VB_ERRC] = 1;
+    err();
+  }
+
+  gnss.setI2COutput(COM_TYPE_UBX);
+  gnss.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
+}
+
 void loop(void) {
   if(!envSensor.run()) {
     bsecCheckStatus(envSensor);
   }
   siRefresh();
+  gnssRefresh();
 
   serializeJson(valbuf, Serial);
   delay(1000);
@@ -150,9 +174,17 @@ void bsecCheckStatus(Bsec2 bsec) {
   }
 }
 
-void siRefresh() {
+void siRefresh(void) {
   valbuf[VB_VISB] = si1145.readVisible();
   valbuf[VB_INFR] = si1145.readIR();
   valbuf[VB_ULVI] = (si1145.readUV() / 100.0);
+}
+
+void gnssRefresh(void) {
+  valbuf[VB_GLAT] = gnss.getLatitude();
+  valbuf[VB_GLON] = gnss.getLongitude();
+  valbuf[VB_GALT] = gnss.getAltitude();
+  valbuf[VB_GALM] = gnss.getAltitudeMSL();
+  valbuf[VB_GSIV] = gnss.getSIV();
 }
 

@@ -13,3 +13,6 @@
 [submodule "lib/json"]
 	path = lib/json
 	url = git@github.com:bblanchon/ArduinoJson.git
+[submodule "lib/gps"]
+	path = lib/gps
+	url = git@github.com:sparkfun/SparkFun_u-blox_GNSS_Arduino_Library.git
