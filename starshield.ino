@@ -6,19 +6,19 @@
 #define PANIC_LED   LED_BUILTIN
 #define ERROR_DUR   1000
 
-#define VB_ERR  "err"
-#define VB_ERRC "errc"
-#define VB_IAQ  "iaq"
-#define VB_IAQA "iaqa"
-#define VB_TEMP "temp"
-#define VB_PRES "pres"
-#define VB_HUMY "humy"
-#define VB_GASR "gasr"
-#define VB_STBS "stbs"
-#define VB_RUNS "runs"
-#define VB_VISB "visb"
-#define VB_INFR "infr"
-#define VB_ULVI "ulvi"
+#define VB_ERR  "err"  // Error
+#define VB_ERRC "errc" // Error code
+#define VB_IAQ  "iaq"  // IAQ
+#define VB_IAQA "iaqa" // IAQ accuracy
+#define VB_TEMP "temp" // Temperature
+#define VB_PRES "pres" // Pressure
+#define VB_HUMY "humy" // Humidity
+#define VB_GASR "gasr" // Gas resistance
+#define VB_STBS "stbs" // Stanilization status
+#define VB_RUNS "runs" // Run in status
+#define VB_VISB "visb" // Visible light
+#define VB_INFR "infr" // Infrared
+#define VB_ULVI "ulvi" // UV index
 
 JsonDocument valbuf;
 
@@ -105,32 +105,24 @@ void bsecDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bs
       case BSEC_OUTPUT_IAQ:
         valbuf[VB_IAQ] = output.signal;
         valbuf[VB_IAQA] = output.accuracy;
-        // Serial.println("\tiaq = " + String(output.signal));
-        // Serial.println("\tiaq accuracy = " + String((int) output.accuracy));
         break;
       case BSEC_OUTPUT_RAW_TEMPERATURE:
         valbuf[VB_TEMP] = output.signal;
-        // Serial.println("\ttemperature = " + String(output.signal));
         break;
       case BSEC_OUTPUT_RAW_PRESSURE:
         valbuf[VB_PRES] = output.signal;
-        // Serial.println("\tpressure = " + String(output.signal));
         break;
       case BSEC_OUTPUT_RAW_HUMIDITY:
         valbuf[VB_HUMY] = output.signal;
-        // Serial.println("\thumidity = " + String(output.signal));
         break;
       case BSEC_OUTPUT_RAW_GAS:
         valbuf[VB_GASR] = output.signal;
-        // Serial.println("\tgas resistance = " + String(output.signal));
         break;
       case BSEC_OUTPUT_STABILIZATION_STATUS:
         valbuf[VB_STBS] = output.signal;
-        // Serial.println("\tstabilization status = " + String(output.signal));
         break;
       case BSEC_OUTPUT_RUN_IN_STATUS:
         valbuf[VB_RUNS] = output.signal;
-        // Serial.println("\trun in status = " + String(output.signal));
         break;
       default:
         break;
