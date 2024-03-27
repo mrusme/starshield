@@ -1,0 +1,15 @@
+[submodule "lib/bsec2"]
+	path = lib/bsec2
+	url = git@github.com:boschsensortec/Bosch-BSEC2-Library.git
+[submodule "lib/bme68x"]
+	path = lib/bme68x
+	url = git@github.com:boschsensortec/Bosch-BME68x-Library.git
+[submodule "lib/si1145"]
+	path = lib/si1145
+	url = git@github.com:adafruit/Adafruit_SI1145_Library.git
+[submodule "lib/busio"]
+	path = lib/busio
+	url = git@github.com:adafruit/Adafruit_BusIO.git
+[submodule "lib/json"]
+	path = lib/json
+	url = git@github.com:bblanchon/ArduinoJson.git

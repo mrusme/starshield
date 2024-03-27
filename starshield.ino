@@ -1,16 +1,166 @@
-int ledPin = 13;
+#include <bsec2.h>
+#include <Wire.h>
+#include <Adafruit_SI1145.h>
+#include <ArduinoJson.h>
 
-void setup()
-{
-    pinMode(ledPin, OUTPUT);
-    Serial.begin(115200);
+#define PANIC_LED   LED_BUILTIN
+#define ERROR_DUR   1000
+
+#define VB_ERR  "err"
+#define VB_ERRC "errc"
+#define VB_IAQ  "iaq"
+#define VB_IAQA "iaqa"
+#define VB_TEMP "temp"
+#define VB_PRES "pres"
+#define VB_HUMY "humy"
+#define VB_GASR "gasr"
+#define VB_STBS "stbs"
+#define VB_RUNS "runs"
+#define VB_VISB "visb"
+#define VB_INFR "infr"
+#define VB_ULVI "ulvi"
+
+JsonDocument valbuf;
+
+Bsec2 envSensor;
+Adafruit_SI1145 si1145;
+
+void err(void);
+
+void setupBsec(void);
+void setupSI(void);
+
+void bsecCheckStatus(Bsec2 bsec);
+void bsecDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
+
+void setup(void) {
+  Serial.begin(115200);
+  Wire.begin();
+  pinMode(PANIC_LED, OUTPUT);
+
+  setupBsec();
+  setupSI();
 }
 
-void loop()
-{
-    Serial.println("Hello, world!");
-    digitalWrite(ledPin, HIGH);
-    delay(500);
-    digitalWrite(ledPin, LOW);
-    delay(500);
+void setupBsec(void) {
+  bsecSensor sensorList[] = {
+    BSEC_OUTPUT_IAQ,
+    BSEC_OUTPUT_RAW_TEMPERATURE,
+    BSEC_OUTPUT_RAW_PRESSURE,
+    BSEC_OUTPUT_RAW_HUMIDITY,
+    BSEC_OUTPUT_RAW_GAS,
+    BSEC_OUTPUT_STABILIZATION_STATUS,
+    BSEC_OUTPUT_RUN_IN_STATUS
+  };
+
+  if(!envSensor.begin(BME68X_I2C_ADDR_HIGH, Wire)) {
+    bsecCheckStatus(envSensor);
+  }
+
+  if(!envSensor.updateSubscription(sensorList,
+    ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP)) {
+    bsecCheckStatus(envSensor);
+  }
+
+  envSensor.attachCallback(bsecDataCallback);
 }
+
+void setupSI(void) {
+  si1145  = Adafruit_SI1145();
+  if(!si1145.begin()) {
+    valbuf[VB_ERR] = F("SI1145 not found");
+    valbuf[VB_ERRC] = 1;
+    err();
+  }
+}
+
+void loop(void) {
+  if(!envSensor.run()) {
+    bsecCheckStatus(envSensor);
+  }
+  siRefresh();
+
+  serializeJson(valbuf, Serial);
+  delay(1000);
+}
+
+void err(void) {
+  while(1) {
+    digitalWrite(PANIC_LED, HIGH);
+    delay(ERROR_DUR);
+    digitalWrite(PANIC_LED, LOW);
+    delay(ERROR_DUR);
+    serializeJson(valbuf, Serial);
+  }
+}
+
+void bsecDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec) {
+  if(!outputs.nOutputs) {
+    return;
+  }
+
+  for(uint8_t i = 0; i < outputs.nOutputs; i++) {
+    const bsecData output  = outputs.output[i];
+    switch(output.sensor_id) {
+      case BSEC_OUTPUT_IAQ:
+        valbuf[VB_IAQ] = output.signal;
+        valbuf[VB_IAQA] = output.accuracy;
+        // Serial.println("\tiaq = " + String(output.signal));
+        // Serial.println("\tiaq accuracy = " + String((int) output.accuracy));
+        break;
+      case BSEC_OUTPUT_RAW_TEMPERATURE:
+        valbuf[VB_TEMP] = output.signal;
+        // Serial.println("\ttemperature = " + String(output.signal));
+        break;
+      case BSEC_OUTPUT_RAW_PRESSURE:
+        valbuf[VB_PRES] = output.signal;
+        // Serial.println("\tpressure = " + String(output.signal));
+        break;
+      case BSEC_OUTPUT_RAW_HUMIDITY:
+        valbuf[VB_HUMY] = output.signal;
+        // Serial.println("\thumidity = " + String(output.signal));
+        break;
+      case BSEC_OUTPUT_RAW_GAS:
+        valbuf[VB_GASR] = output.signal;
+        // Serial.println("\tgas resistance = " + String(output.signal));
+        break;
+      case BSEC_OUTPUT_STABILIZATION_STATUS:
+        valbuf[VB_STBS] = output.signal;
+        // Serial.println("\tstabilization status = " + String(output.signal));
+        break;
+      case BSEC_OUTPUT_RUN_IN_STATUS:
+        valbuf[VB_RUNS] = output.signal;
+        // Serial.println("\trun in status = " + String(output.signal));
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+void bsecCheckStatus(Bsec2 bsec) {
+  if(bsec.status < BSEC_OK) {
+    valbuf[VB_ERR] = F("BSEC error");
+    valbuf[VB_ERRC] = bsec.status;
+    err();
+  } else if(bsec.status > BSEC_OK) {
+    valbuf[VB_ERR] = F("BSEC warning");
+    valbuf[VB_ERRC] = bsec.status;
+  }
+
+  if(bsec.sensor.status < BME68X_OK) {
+    valbuf[VB_ERR] = F("BSEC sensor error");
+    valbuf[VB_ERRC] = bsec.sensor.status;
+    err();
+  } else if(bsec.sensor.status > BME68X_OK) {
+    valbuf[VB_ERR] = F("BSEC sensor warning");
+    valbuf[VB_ERRC] = bsec.sensor.status;
+  }
+}
+
+void siRefresh() {
+  valbuf[VB_VISB] = si1145.readVisible();
+  valbuf[VB_INFR] = si1145.readIR();
+  valbuf[VB_ULVI] = (si1145.readUV() / 100.0);
+}
+
