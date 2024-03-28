@@ -2,10 +2,17 @@
 #include <Wire.h>
 #include <Adafruit_SI1145.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
+#include <SparkFun_BNO08x_Arduino_Library.h>
 #include <ArduinoJson.h>
 
 #define PANIC_LED   LED_BUILTIN
 #define ERROR_DUR   1000
+
+// #define BNO08X_INT  A4
+#define BNO08X_INT  -1
+// #define BNO08X_RST  A5
+#define BNO08X_RST  -1
+#define BNO08X_ADDR 0x4B
 
 #define VB_ERR  "err"  // Error
 #define VB_ERRC "errc" // Error code
@@ -28,6 +35,7 @@
 #define VB_GHED "ghed" // GPS Heading (deg * 10^-5)
 #define VB_GSIV "gsiv" // GPS SIV
 #define VB_GUXT "guxt" // GPS UNIX Epoch Time
+#define VB_IMSC "imsc" // IMU stability classifier
 
 
 JsonDocument valbuf;
@@ -35,18 +43,21 @@ JsonDocument valbuf;
 Bsec2 envSensor;
 Adafruit_SI1145 si1145;
 SFE_UBLOX_GNSS gnss;
+BNO08x imu;
 
 void err(void);
 
 void setupBsec(void);
 void setupSI(void);
 void setupGNSS(void);
+void setupIMU(void);
 
 void bsecCheckStatus(Bsec2 bsec);
 void bsecDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
 
 void siRefresh(void);
 void gnssRefresh(void);
+void imuRefresh(void);
 
 void setup(void) {
   Serial.begin(115200);
@@ -56,6 +67,7 @@ void setup(void) {
   setupBsec();
   setupSI();
   setupGNSS();
+  setupIMU();
 }
 
 void setupBsec(void) {
@@ -74,7 +86,7 @@ void setupBsec(void) {
   }
 
   if(!envSensor.updateSubscription(sensorList,
-    ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP)) {
+        ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP)) {
     bsecCheckStatus(envSensor);
   }
 
@@ -101,12 +113,21 @@ void setupGNSS(void) {
   gnss.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
 }
 
+void setupIMU(void) {
+  if(!imu.begin(BNO08X_ADDR, Wire, BNO08X_INT, BNO08X_RST)) {
+    valbuf[VB_ERR] = F("IMU not found");
+    valbuf[VB_ERRC] = 1;
+    err();
+  }
+}
+
 void loop(void) {
   if(!envSensor.run()) {
     bsecCheckStatus(envSensor);
   }
   siRefresh();
   gnssRefresh();
+  imuRefresh();
 
   serializeJson(valbuf, Serial);
   delay(1000);
@@ -195,3 +216,22 @@ void gnssRefresh(void) {
   valbuf[VB_GSIV] = gnss.getSIV();
 }
 
+void imuRefresh(void) {
+  if(imu.wasReset()) {
+    if(!imu.enableStabilityClassifier()) {
+      valbuf[VB_ERR] = F("IMU stability classifier not available");
+      valbuf[VB_ERRC] = 1;
+      err();
+    }
+  }
+
+  if(imu.getSensorEvent()) {
+    switch(imu.getSensorEventID()) {
+      case SENSOR_REPORTID_STABILITY_CLASSIFIER:
+        valbuf[VB_IMSC] = imu.getStabilityClassifier();
+        break;
+      default:
+        break;
+    }
+  }
+}

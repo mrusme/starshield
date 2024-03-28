@@ -16,3 +16,6 @@
 [submodule "lib/gps"]
 	path = lib/gps
 	url = git@github.com:sparkfun/SparkFun_u-blox_GNSS_Arduino_Library.git
+[submodule "lib/imu"]
+	path = lib/imu
+	url = git@github.com:sparkfun/SparkFun_BNO08x_Arduino_Library.git
