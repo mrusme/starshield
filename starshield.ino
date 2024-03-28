@@ -36,6 +36,8 @@
 #define VB_GSIV "gsiv" // GPS SIV
 #define VB_GUXT "guxt" // GPS UNIX Epoch Time
 #define VB_IMSC "imsc" // IMU stability classifier
+#define VB_IMAC "imac" // IMU activity classifier
+#define VB_IMSP "imsp" // IMU step counter
 
 
 JsonDocument valbuf;
@@ -229,6 +231,12 @@ void imuRefresh(void) {
     switch(imu.getSensorEventID()) {
       case SENSOR_REPORTID_STABILITY_CLASSIFIER:
         valbuf[VB_IMSC] = imu.getStabilityClassifier();
+        break;
+      case SENSOR_REPORTID_PERSONAL_ACTIVITY_CLASSIFIER:
+        valbuf[VB_IMAC] = imu.getActivityClassifier();
+        break;
+      case SENSOR_REPORTID_STEP_COUNTER:
+        valbuf[VB_IMSP] = imu.getStepCount();
         break;
       default:
         break;
