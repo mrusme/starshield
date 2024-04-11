@@ -69,7 +69,7 @@ void setup(void) {
   setupBsec();
   setupSI();
   setupGNSS();
-  setupIMU();
+  // setupIMU();
 }
 
 void setupBsec(void) {
@@ -129,7 +129,7 @@ void loop(void) {
   }
   siRefresh();
   gnssRefresh();
-  imuRefresh();
+  // imuRefresh();
 
   serializeJson(valbuf, Serial);
   delay(1000);
