@@ -83,6 +83,7 @@ void loop(void) {
   siRefresh();
 
   serializeJson(valbuf, Serial);
+  Serial.print("\n");
   delay(1000);
 }
 
