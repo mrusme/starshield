@@ -71,7 +71,6 @@ func main() {
 	go httpServer(&STATE)
 
 	for {
-		STATE.Print()
 		time.Sleep(time.Second * 5)
 	}
 }

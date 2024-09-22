@@ -35,13 +35,13 @@ func Reader(sport string, state *serialdata.SerialData) {
 				break
 			}
 		}
-		log.Printf("%v", sdjs)
+		// log.Printf("%v", sdjs)
 		sd, err := serialdata.New([]byte(sdjs))
 		if err != nil {
-			log.Println(err)
+			// log.Println(err)
 			continue
 		}
-		log.Printf("%v\n", sd)
+		// log.Printf("%v\n", sd)
 
 		state.UpdateFrom(sd)
 	}
