@@ -11,9 +11,13 @@
 #define VB_IAQ  "iaq"  // IAQ
 #define VB_IAQA "iaqa" // IAQ accuracy
 #define VB_TEMP "temp" // Temperature
+#define VB_TEMC "temc" // Temperature (Compensated)
 #define VB_PRES "pres" // Pressure
 #define VB_HUMY "humy" // Humidity
+#define VB_HUMC "humc" // Humidity (Compensated)
+#define VB_CO2E "co2e" // CO2 Equivalent
 #define VB_GASR "gasr" // Gas resistance
+#define VB_GASP "gasp" // Gas percentage
 #define VB_STBS "stbs" // Stanilization status
 #define VB_RUNS "runs" // Run in status
 #define VB_VISB "visb" // Visible light
@@ -47,12 +51,16 @@ void setup(void) {
 void setupBsec(void) {
   bsecSensor sensorList[] = {
     BSEC_OUTPUT_IAQ,
+    BSEC_OUTPUT_CO2_EQUIVALENT,
     BSEC_OUTPUT_RAW_TEMPERATURE,
     BSEC_OUTPUT_RAW_PRESSURE,
     BSEC_OUTPUT_RAW_HUMIDITY,
     BSEC_OUTPUT_RAW_GAS,
     BSEC_OUTPUT_STABILIZATION_STATUS,
-    BSEC_OUTPUT_RUN_IN_STATUS
+    BSEC_OUTPUT_RUN_IN_STATUS,
+    BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,
+    BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,
+    BSEC_OUTPUT_GAS_PERCENTAGE
   };
 
   if(!envSensor.begin(BME68X_I2C_ADDR_HIGH, Wire)) {
@@ -109,6 +117,9 @@ void bsecDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bs
         valbuf[VB_IAQ] = output.signal;
         valbuf[VB_IAQA] = output.accuracy;
         break;
+      case BSEC_OUTPUT_CO2_EQUIVALENT:
+        valbuf[VB_CO2E] = output.signal;
+        break;
       case BSEC_OUTPUT_RAW_TEMPERATURE:
         valbuf[VB_TEMP] = output.signal;
         break;
@@ -121,11 +132,20 @@ void bsecDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bs
       case BSEC_OUTPUT_RAW_GAS:
         valbuf[VB_GASR] = output.signal;
         break;
+      case BSEC_OUTPUT_GAS_PERCENTAGE:
+        valbuf[VB_GASP] = output.signal;
+        break;
       case BSEC_OUTPUT_STABILIZATION_STATUS:
         valbuf[VB_STBS] = output.signal;
         break;
       case BSEC_OUTPUT_RUN_IN_STATUS:
         valbuf[VB_RUNS] = output.signal;
+        break;
+      case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
+        valbuf[VB_TEMC] = output.signal;
+        break;
+      case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
+        valbuf[VB_HUMC] = output.signal;
         break;
       default:
         break;
