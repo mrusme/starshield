@@ -1,0 +1,12 @@
+#!/bin/sh
+resp=$(curl --silent -H 'Content-Type: application/json' http://127.0.0.1:3232)
+if [ -n "$resp" ]
+then
+  temp=$(echo $resp | jq '.temp' | xargs printf '%.*f\n' 1 $a)
+  humy=$(echo $resp | jq '.humy' | xargs printf '%.*f\n' 1 $a)
+
+  echo -n "{\"text\": \" <span color='#aaaaaa'>$temp°C</span> [<span color='#aaaaaa'>$humy%</span>] · \", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
+else
+  echo -n ""
+fi
+
