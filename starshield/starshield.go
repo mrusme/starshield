@@ -44,21 +44,25 @@ func main() {
 
 	sport := os.Args[1]
 
-	ports, err := serial.GetPortsList()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(ports) == 0 {
-		log.Fatal("No serial ports found!")
-	}
-	sportFound := false
-	for _, port := range ports {
-		if port == sport {
-			sportFound = true
+	for {
+		ports, err := serial.GetPortsList()
+		if err != nil {
+			log.Fatal(err)
 		}
-	}
-	if !sportFound {
-		log.Fatal("Given serial port not found!")
+
+		if len(ports) > 0 {
+			sportFound := false
+			for _, port := range ports {
+				if port == sport {
+					sportFound = true
+				}
+			}
+			if sportFound {
+				break
+			}
+		}
+
+		time.Sleep(10 * time.Second)
 	}
 
 	STATE = serialdata.SerialData{}
