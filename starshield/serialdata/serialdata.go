@@ -25,6 +25,10 @@ type SerialData struct {
 	VisibleLight        int     `json:"visb,omitempty"`
 	Infrared            int     `json:"infr,omitempty"`
 	UVIndex             float64 `json:"ulvi,omitempty"`
+	Latitude            int     `json:"latt,omitempty"`
+	Longitude           int     `json:"long,omitempty"`
+	Altitude            int     `json:"altt,omitempty"` // mm
+	SIV                 int     `json:"sivv,omitempty"`
 
 	mtx sync.Mutex
 }

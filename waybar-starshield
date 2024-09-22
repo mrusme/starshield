@@ -12,7 +12,11 @@ then
   ulvi=$(echo $resp | jq '.ulvi' | xargs printf '%.*f\n' 1 $a)
   visb=$(echo $resp | jq '.visb' | xargs printf '%.*f\n' 1 $a)
 
-  echo -n "{\"text\": \"󰀛 <span color='#aaaaaa'>${temp}°C</span> [<span color='#aaaaaa'>${humy}% ${pres}hPa</span>] · 󰵃 <span color='#aaaaaa'>${iaq}</span> [<span color='#aaaaaa'>${gasp}%</span>] · 󱟾 <span color='#aaaaaa'>${ulvi}</span> [<span color='#aaaaaa'>${visb}lm</span>]\", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
+  latt=$(echo $resp | jq '.latt' | xargs -I {} echo "{}*10^-7" | eva | xargs printf '%.*f\n' 8 $a)
+  long=$(echo $resp | jq '.long' | xargs -I {} echo "{}*10^-7" | eva | xargs printf '%.*f\n' 8 $a)
+  altt=$(echo $resp | jq '.altt' | xargs -I {} echo "{}/1000" | bc )
+
+  echo -n "{\"text\": \" <span color='#aaaaaa'>${altt}m</span> [<span color='#aaaaaa'>${latt} ${long}</span>] · 󰀛 <span color='#aaaaaa'>${temp}°C</span> [<span color='#aaaaaa'>${humy}% ${pres}hPa</span>] · 󰵃 <span color='#aaaaaa'>${iaq}</span> [<span color='#aaaaaa'>${gasp}%</span>] · 󱟾 <span color='#aaaaaa'>${ulvi}</span> [<span color='#aaaaaa'>${visb}lm</span>]\", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
 else
   echo -n ""
 fi

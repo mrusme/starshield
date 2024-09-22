@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <Adafruit_SI1145.h>
 #include <ArduinoJson.h>
+#include <SparkFun_u-blox_GNSS_Arduino_Library.h>
 
 #define PANIC_LED   LED_BUILTIN
 #define ERROR_DUR   1000
@@ -23,11 +24,16 @@
 #define VB_VISB "visb" // Visible light
 #define VB_INFR "infr" // Infrared
 #define VB_ULVI "ulvi" // UV index
+#define VB_LATT "latt" // Latitude
+#define VB_LONG "long" // Longitude
+#define VB_ALTT "altt" // Altitude
+#define VB_SIVV "sivv" // SIV
 
 JsonDocument valbuf;
 
 Bsec2 envSensor;
 Adafruit_SI1145 si1145;
+SFE_UBLOX_GNSS gps;
 
 void err(void);
 
@@ -46,6 +52,7 @@ void setup(void) {
 
   setupBsec();
   setupSI();
+  setupGPS();
 }
 
 void setupBsec(void) {
@@ -80,8 +87,18 @@ void setupSI(void) {
   if(!si1145.begin()) {
     valbuf[VB_ERR] = F("SI1145 not found");
     valbuf[VB_ERRC] = 1;
-    err();
+    return err();
   }
+}
+
+void setupGPS(void) {
+  if(gps.begin(Wire) == false) {
+    valbuf[VB_ERR] = F("u-blox not found");
+    valbuf[VB_ERRC] = 1;
+    return err();
+  }
+  gps.setI2COutput(COM_TYPE_UBX);
+  gps.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
 }
 
 void loop(void) {
@@ -89,6 +106,7 @@ void loop(void) {
     bsecCheckStatus(envSensor);
   }
   siRefresh();
+  gpsRefresh();
 
   serializeJson(valbuf, Serial);
   Serial.print("\n");
@@ -157,7 +175,7 @@ void bsecCheckStatus(Bsec2 bsec) {
   if(bsec.status < BSEC_OK) {
     valbuf[VB_ERR] = F("BSEC error");
     valbuf[VB_ERRC] = bsec.status;
-    err();
+    return err();
   } else if(bsec.status > BSEC_OK) {
     valbuf[VB_ERR] = F("BSEC warning");
     valbuf[VB_ERRC] = bsec.status;
@@ -166,7 +184,7 @@ void bsecCheckStatus(Bsec2 bsec) {
   if(bsec.sensor.status < BME68X_OK) {
     valbuf[VB_ERR] = F("BSEC sensor error");
     valbuf[VB_ERRC] = bsec.sensor.status;
-    err();
+    return err();
   } else if(bsec.sensor.status > BME68X_OK) {
     valbuf[VB_ERR] = F("BSEC sensor warning");
     valbuf[VB_ERRC] = bsec.sensor.status;
@@ -179,3 +197,9 @@ void siRefresh(void) {
   valbuf[VB_ULVI] = (si1145.readUV() / 100.0);
 }
 
+void gpsRefresh(void) {
+  valbuf[VB_LATT] = gps.getLatitude();
+  valbuf[VB_LONG] = gps.getLongitude();
+  valbuf[VB_ALTT] = gps.getAltitude();
+  valbuf[VB_SIVV] = gps.getSIV();
+}
