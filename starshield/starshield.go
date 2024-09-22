@@ -2,12 +2,40 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
-	"strings"
+	"time"
 
+	"github.com/mrusme/starshield/reader"
 	"github.com/mrusme/starshield/serialdata"
 	"go.bug.st/serial"
 )
+
+var STATE serialdata.SerialData
+
+type Response struct {
+	Message string `json:"message"`
+	Status  int    `json:"status"`
+}
+
+func handler(sd *serialdata.SerialData) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+
+			w.Header().Set("Content-Type", "application/json")
+
+			jsonResponse := sd.ToJSON()
+			w.Write(jsonResponse)
+		} else {
+			http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		}
+	}
+}
+
+func httpServer(sd *serialdata.SerialData) {
+	http.HandleFunc("/", handler(sd))
+	log.Fatal(http.ListenAndServe("127.0.0.1:3232", nil))
+}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -33,38 +61,13 @@ func main() {
 		log.Fatal("Given serial port not found!")
 	}
 
-	mode := &serial.Mode{
-		BaudRate: 115200,
-	}
-	port, err := serial.Open(sport, mode)
-	if err != nil {
-		log.Fatal(err)
-	}
+	STATE = serialdata.SerialData{}
+
+	go reader.Reader(sport, &STATE)
+	go httpServer(&STATE)
 
 	for {
-		var sdjs string
-
-		for {
-			buff := make([]byte, 128)
-			n, err := port.Read(buff)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if n == 0 {
-				break
-			}
-			sdjs += string(buff[:n])
-
-			if strings.Contains(string(buff[:n]), "\n") {
-				break
-			}
-		}
-		log.Printf("%v", sdjs)
-		sd, err := serialdata.New([]byte(sdjs))
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		log.Printf("%v\n", sd)
+		STATE.Print()
+		time.Sleep(time.Second * 5)
 	}
 }
