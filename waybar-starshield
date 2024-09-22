@@ -4,8 +4,15 @@ if [ -n "$resp" ]
 then
   temp=$(echo $resp | jq '.temp' | xargs printf '%.*f\n' 1 $a)
   humy=$(echo $resp | jq '.humy' | xargs printf '%.*f\n' 1 $a)
+  pres=$(echo $resp | jq '.pres' | xargs printf '%.*f\n' 1 $a)
 
-  echo -n "{\"text\": \" <span color='#aaaaaa'>$temp°C</span> [<span color='#aaaaaa'>$humy%</span>] · \", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
+  iaq=$(echo $resp | jq '.iaq' | xargs printf '%.*f\n' 1 $a)
+  gasp=$(echo $resp | jq '.gasp' | xargs printf '%.*f\n' 1 $a)
+
+  ulvi=$(echo $resp | jq '.ulvi' | xargs printf '%.*f\n' 1 $a)
+  visb=$(echo $resp | jq '.visb' | xargs printf '%.*f\n' 1 $a)
+
+  echo -n "{\"text\": \"󰀛 <span color='#aaaaaa'>${temp}°C</span> [<span color='#aaaaaa'>${humy}% ${pres}hPa</span>] · 󰵃 <span color='#aaaaaa'>${iaq}</span> [<span color='#aaaaaa'>${gasp}%</span>] · 󱟾 <span color='#aaaaaa'>${ulvi}</span> [<span color='#aaaaaa'>${visb}lm</span>]\", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
 else
   echo -n ""
 fi
