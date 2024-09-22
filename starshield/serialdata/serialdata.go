@@ -12,10 +12,14 @@ type SerialData struct {
 	ErrorCode           int     `json:"errc,omitempty"`
 	IAQ                 float64 `json:"iaq,omitempty"`
 	IAQAccuracy         int     `json:"iaqa,omitempty"`
+	CO2Equivalent       float64 `json:"co2e,omitempty"`
 	Temperature         float64 `json:"temp,omitempty"`
+	TemperatureComp     float64 `json:"temc,omitempty"`
 	Pressure            float64 `json:"pres,omitempty"`
 	Humidity            float64 `json:"humy,omitempty"`
+	HumidityComp        float64 `json:"humc,omitempty"`
 	GasResistance       float64 `json:"gasr,omitempty"`
+	GasPercentage       float64 `json:"gasp,omitempty"`
 	StanilizationStatus int     `json:"stbs,omitempty"`
 	RunInStatus         int     `json:"runs,omitempty"`
 	VisibleLight        int     `json:"visb,omitempty"`
