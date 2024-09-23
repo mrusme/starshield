@@ -49,6 +49,16 @@ func (sd *SerialData) UpdateFrom(usd *SerialData) {
 	sd.mtx.Unlock()
 }
 
+func (sd *SerialData) GetLatLonAlt() (int, int, int) {
+	sd.mtx.Lock()
+	lat := sd.Latitude
+	lon := sd.Longitude
+	alt := sd.Altitude
+	sd.mtx.Unlock()
+
+	return lat, lon, alt
+}
+
 func (sd *SerialData) Print() {
 	sd.mtx.Lock()
 	fmt.Printf("%v\n", sd)
