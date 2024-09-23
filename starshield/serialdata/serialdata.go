@@ -28,6 +28,7 @@ type SerialData struct {
 	Latitude            int     `json:"latt,omitempty"`
 	Longitude           int     `json:"long,omitempty"`
 	Altitude            int     `json:"altt,omitempty"` // mm
+	Accuracy            int     `json:"accy,omitempty"` // mm
 	SIV                 int     `json:"sivv,omitempty"`
 
 	mtx sync.Mutex
@@ -49,14 +50,15 @@ func (sd *SerialData) UpdateFrom(usd *SerialData) {
 	sd.mtx.Unlock()
 }
 
-func (sd *SerialData) GetLatLonAlt() (int, int, int) {
+func (sd *SerialData) GetLatLonAltAcc() (int, int, int, int) {
 	sd.mtx.Lock()
 	lat := sd.Latitude
 	lon := sd.Longitude
 	alt := sd.Altitude
+	acc := sd.Accuracy
 	sd.mtx.Unlock()
 
-	return lat, lon, alt
+	return lat, lon, alt, acc
 }
 
 func (sd *SerialData) Print() {

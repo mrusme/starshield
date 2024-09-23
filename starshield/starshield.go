@@ -43,11 +43,11 @@ func handlerLocation(sd *serialdata.SerialData) http.HandlerFunc {
 
 			w.Header().Set("Content-Type", "application/json")
 
-			lat, lon, _ := sd.GetLatLonAlt()
+			lat, lon, _, acc := sd.GetLatLonAltAcc()
 			locResp := LocationResponse{}
 			locResp.Location.Latitude = (float64(lat) * math.Pow(10, -7))
 			locResp.Location.Longitude = (float64(lon) * math.Pow(10, -7))
-			locResp.Accuracy = 27000.0
+			locResp.Accuracy = (float64(acc) / 1000.0)
 
 			jsonResponse, err := json.Marshal(locResp)
 			if err != nil {

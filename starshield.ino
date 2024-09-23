@@ -27,6 +27,7 @@
 #define VB_LATT "latt" // Latitude
 #define VB_LONG "long" // Longitude
 #define VB_ALTT "altt" // Altitude
+#define VB_ACCY "accy" // Accuracy
 #define VB_SIVV "sivv" // SIV
 
 JsonDocument valbuf;
@@ -201,5 +202,6 @@ void gpsRefresh(void) {
   valbuf[VB_LATT] = gps.getLatitude();
   valbuf[VB_LONG] = gps.getLongitude();
   valbuf[VB_ALTT] = gps.getAltitude();
+  valbuf[VB_ACCY] = gps.getPositionAccuracy();
   valbuf[VB_SIVV] = gps.getSIV();
 }
