@@ -2,19 +2,65 @@
 resp=$(curl --silent -H 'Content-Type: application/json' http://127.0.0.1:3232)
 if [ -n "$resp" ]
 then
-  temp=$(echo $resp | jq '.temp' | xargs printf '%.*f\n' 1 $a)
-  humy=$(echo $resp | jq '.humy' | xargs printf '%.*f\n' 1 $a)
-  pres=$(echo $resp | jq '.pres' | xargs printf '%.*f\n' 1 $a)
+  temp=0
+  if [ -n $(echo $resp | jq -r '.temp // empty') ]
+  then
+    temp=$(echo $resp | jq '.temp' | xargs printf '%.*f\n' 1 $a)
+  fi
 
-  iaq=$(echo $resp | jq '.iaq' | xargs printf '%.*f\n' 1 $a)
-  gasp=$(echo $resp | jq '.gasp' | xargs printf '%.*f\n' 1 $a)
+  humy=0
+  if [ -n $(echo $resp | jq -r '.humy // empty') ]
+  then
+    humy=$(echo $resp | jq '.humy' | xargs printf '%.*f\n' 1 $a)
+  fi
 
-  ulvi=$(echo $resp | jq '.ulvi' | xargs printf '%.*f\n' 1 $a)
-  visb=$(echo $resp | jq '.visb' | xargs printf '%.*f\n' 1 $a)
+  pres=0
+  if [ -n $(echo $resp | jq -r '.pres // empty') ]
+  then
+    pres=$(echo $resp | jq '.pres' | xargs printf '%.*f\n' 1 $a)
+  fi
 
-  latt=$(echo $resp | jq '.latt' | xargs -I {} echo "{}*10^-7" | eva | xargs printf '%.*f\n' 8 $a)
-  long=$(echo $resp | jq '.long' | xargs -I {} echo "{}*10^-7" | eva | xargs printf '%.*f\n' 8 $a)
-  altt=$(echo $resp | jq '.altt' | xargs -I {} echo "{}/1000" | bc )
+  iaq=0
+  if [ -n $(echo $resp | jq -r '.iaq // empty') ]
+  then
+    iaq=$(echo $resp | jq '.iaq' | xargs printf '%.*f\n' 1 $a)
+  fi
+
+  gasp=0
+  if [ -n $(echo $resp | jq -r '.gasp // empty') ]
+  then
+    gasp=$(echo $resp | jq '.gasp' | xargs printf '%.*f\n' 1 $a)
+  fi
+
+  ulvi=0
+  if [ -n $(echo $resp | jq -r '.ulvi // empty') ]
+  then
+    ulvi=$(echo $resp | jq '.ulvi' | xargs printf '%.*f\n' 1 $a)
+  fi
+
+  visb=0
+  if [ -n $(echo $resp | jq -r '.visb // empty') ]
+  then
+    visb=$(echo $resp | jq '.visb' | xargs printf '%.*f\n' 1 $a)
+  fi
+
+  latt=0
+  if [ -n $(echo $resp | jq -r '.latt // empty') ]
+  then
+    latt=$(echo $resp | jq '.latt' | xargs -I {} echo "{}*10^-7" | eva | xargs printf '%.*f\n' 8 $a)
+  fi
+
+  long=0
+  if [ -n $(echo $resp | jq -r '.long // empty') ]
+  then
+    long=$(echo $resp | jq '.long' | xargs -I {} echo "{}*10^-7" | eva | xargs printf '%.*f\n' 8 $a)
+  fi
+
+  altt=0
+  if [ -n $(echo $resp | jq -r '.altt // empty') ]
+  then
+    altt=$(echo $resp | jq '.altt' | xargs -I {} echo "{}/1000" | bc )
+  fi
 
   echo -n "{\"text\": \" <span color='#aaaaaa'>${altt}m</span> [<span color='#aaaaaa'>${latt} ${long}</span>] · 󰀛 <span color='#aaaaaa'>${temp}°C</span> [<span color='#aaaaaa'>${humy}% ${pres}hPa</span>] · 󰵃 <span color='#aaaaaa'>${iaq}</span> [<span color='#aaaaaa'>${gasp}%</span>] · 󱟾 <span color='#aaaaaa'>${ulvi}</span> [<span color='#aaaaaa'>${visb}lm</span>]\", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
 else
