@@ -30,6 +30,8 @@ type SerialData struct {
 	Altitude            int     `json:"altt,omitempty"` // mm
 	Accuracy            int     `json:"accy,omitempty"` // mm
 	SIV                 int     `json:"sivv,omitempty"`
+	StabilityClassifier string  `json:"stab,omitempty"`
+	ActivityClassifier  string  `json:"acty,omitempty"`
 
 	mtx sync.Mutex
 }

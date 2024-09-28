@@ -3,9 +3,14 @@
 #include <Adafruit_SI1145.h>
 #include <ArduinoJson.h>
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h>
+#include <SparkFun_BNO08x_Arduino_Library.h>
 
 #define PANIC_LED   LED_BUILTIN
 #define ERROR_DUR   1000
+
+#define BNO08X_INT  A4
+#define BNO08X_RST  A5
+#define BNO08X_ADDR 0x4B
 
 #define VB_ERR  "err"  // Error
 #define VB_ERRC "errc" // Error code
@@ -29,31 +34,41 @@
 #define VB_ALTT "altt" // Altitude
 #define VB_ACCY "accy" // Accuracy
 #define VB_SIVV "sivv" // SIV
+#define VB_STAB "stab" // Stability Classifier
+#define VB_ACTY "acty" // Activity Classifier
 
 JsonDocument valbuf;
 
 Bsec2 envSensor;
 Adafruit_SI1145 si1145;
 SFE_UBLOX_GNSS gps;
+BNO08x imu;
+bool imuBegan = false;
 
 void err(void);
 
 void setupBsec(void);
 void setupSI(void);
+void setupGPS(void);
+void setupIMU(void);
 
 void bsecCheckStatus(Bsec2 bsec);
 void bsecDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
 
 void siRefresh(void);
+void gpsRefresh(void);
+void imuRefresh(void);
 
 void setup(void) {
   Serial.begin(115200);
   Wire.begin();
+  // Wire.setClock(400000);
   pinMode(PANIC_LED, OUTPUT);
 
   setupBsec();
   setupSI();
   setupGPS();
+  // setupIMU();
 }
 
 void setupBsec(void) {
@@ -102,12 +117,36 @@ void setupGPS(void) {
   gps.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);
 }
 
+void setupIMU(void) {
+  if(imuBegan == false) {
+    // if(imu.begin(BNO08X_ADDR, Wire, BNO08X_INT, BNO08X_RST) == false) {
+    if(imu.begin() == false) {
+      valbuf[VB_ERR] = F("BNO080 not found");
+      valbuf[VB_ERRC] = 1;
+      return err();
+    } else {
+      imuBegan = true;
+    }
+  }
+  if(imu.enableStabilityClassifier() == false) {
+    valbuf[VB_ERR] = F("BNO080 stability classifier not ok");
+    valbuf[VB_ERRC] = 1;
+    return err();
+  }
+  if(imu.enableActivityClassifier(1000, 0x1F) == false) {
+    valbuf[VB_ERR] = F("BNO080 activity classifier not ok");
+    valbuf[VB_ERRC] = 1;
+    return err();
+  }
+}
+
 void loop(void) {
   if(!envSensor.run()) {
     bsecCheckStatus(envSensor);
   }
   siRefresh();
   gpsRefresh();
+  // imuRefresh();
 
   serializeJson(valbuf, Serial);
   Serial.print("\n");
@@ -204,4 +243,67 @@ void gpsRefresh(void) {
   valbuf[VB_ALTT] = gps.getAltitude();
   valbuf[VB_ACCY] = gps.getPositionAccuracy();
   valbuf[VB_SIVV] = gps.getSIV();
+}
+
+void imuRefresh(void) {
+  if(imu.wasReset()) {
+    setupIMU();
+  }
+
+  if(imu.getSensorEvent() == true) {
+    if(imu.getSensorEventID() == SENSOR_REPORTID_STABILITY_CLASSIFIER) {
+      byte classification = imu.getStabilityClassifier();
+      switch(classification) {
+        case STABILITY_CLASSIFIER_UNKNOWN:
+          valbuf[VB_STAB] = F("unknown");
+          break;
+        case STABILITY_CLASSIFIER_ON_TABLE:
+          valbuf[VB_STAB] = F("table");
+          break;
+        case STABILITY_CLASSIFIER_STATIONARY:
+          valbuf[VB_STAB] = F("stationary");
+          break;
+        case STABILITY_CLASSIFIER_STABLE:
+          valbuf[VB_STAB] = F("stable");
+          break;
+        case STABILITY_CLASSIFIER_MOTION:
+          valbuf[VB_STAB] = F("motion");
+          break;
+        case STABILITY_CLASSIFIER_RESERVED:
+          valbuf[VB_STAB] = F("reserved");
+          break;
+      }
+    } else if(imu.getSensorEventID() == SENSOR_REPORTID_PERSONAL_ACTIVITY_CLASSIFIER) {
+      byte mostLikelyActivity = imu.getActivityClassifier();
+      switch(mostLikelyActivity) {
+        case 0:
+          valbuf[VB_ACTY] = F("unknown");
+          break;
+        case 1:
+          valbuf[VB_ACTY] = F("vehicle");
+          break;
+        case 2:
+          valbuf[VB_ACTY] = F("bicycle");
+          break;
+        case 3:
+          valbuf[VB_ACTY] = F("foot");
+          break;
+        case 4:
+          valbuf[VB_ACTY] = F("still");
+          break;
+        case 5:
+          valbuf[VB_ACTY] = F("tilt");
+          break;
+        case 6:
+          valbuf[VB_ACTY] = F("walk");
+          break;
+        case 7:
+          valbuf[VB_ACTY] = F("run");
+          break;
+        case 8:
+          valbuf[VB_ACTY] = F("stairs");
+          break;
+      }
+    }
+  }
 }
