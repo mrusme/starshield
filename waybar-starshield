@@ -62,7 +62,7 @@ then
     altt=$(echo $resp | jq '.altt' | xargs -I {} echo "{}/1000" | bc )
   fi
 
-  echo -n "{\"text\": \" <span color='#aaaaaa'>${altt}m</span> [<span color='#aaaaaa'>${latt} ${long}</span>] · 󰀛 <span color='#aaaaaa'>${temp}°C</span> [<span color='#aaaaaa'>${humy}% ${pres}hPa</span>] · 󰵃 <span color='#aaaaaa'>${iaq}</span> [<span color='#aaaaaa'>${gasp}%</span>] · 󱟾 <span color='#aaaaaa'>${ulvi}</span> [<span color='#aaaaaa'>${visb}lm</span>]\", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
+  echo -n "{\"text\": \" ${altt}m [<span color='#aaaaaa'>${latt} ${long}</span>] · 󰀛 ${temp}°C [<span color='#aaaaaa'>${humy}% ${pres}hPa</span>] · 󰵃 ${iaq} [<span color='#aaaaaa'>${gasp}%</span>] · 󱟾 ${ulvi} [<span color='#aaaaaa'>${visb}lm</span>]\", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
 else
   echo -n ""
 fi
