@@ -1,4 +1,17 @@
 #!/bin/sh
+
+NO_GPS=0
+NO_TEMP=0
+NO_IAQ=0
+NO_UV=0
+
+while test $# -gt 0 ; do
+  if test "$1" = "--no-gps"; then NO_GPS=1; shift; continue; fi
+  if test "$1" = "--no-temp"; then NO_TEMP=1; shift; continue; fi
+  if test "$1" = "--no-iaq"; then NO_IAQ=1; shift; continue; fi
+  if test "$1" = "--no-uv"; then NO_UV=1; shift; continue; fi
+done
+
 resp=$(curl --silent -H 'Content-Type: application/json' http://127.0.0.1:3232)
 if [ -n "$resp" ]
 then
@@ -62,7 +75,36 @@ then
     altt=$(echo $resp | jq '.altt' | xargs -I {} echo "{}/1000" | bc )
   fi
 
-  echo -n "{\"text\": \" ${altt}m [<span color='#aaaaaa'>${latt} ${long}</span>] · 󰀛 ${temp}°C [<span color='#aaaaaa'>${humy}% ${pres}hPa</span>] · 󰵃 ${iaq} [<span color='#aaaaaa'>${gasp}%</span>] · 󱟾 ${ulvi} [<span color='#aaaaaa'>${visb}lm</span>]\", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
+  echo -n "{\"text\": \""
+  if [ $NO_GPS = 0 ]
+  then
+    echo -n " ${altt}m [<span color='#aaaaaa'>${latt} ${long}</span>]"
+  fi
+  if [ $NO_TEMP = 0 ]
+  then
+    if [ $NO_GPS = 0 ]
+    then
+      echo -n " · "
+    fi
+    echo -n "󰀛 ${temp}°C [<span color='#aaaaaa'>${humy}% ${pres}hPa</span>]"
+  fi
+  if [ $NO_IAQ = 0 ]
+  then
+    if [ $NO_GPS = 0 ] || [ $NO_TEMP = 0 ]
+    then
+      echo -n " · "
+    fi
+    echo -n "󰵃 ${iaq} [<span color='#aaaaaa'>${gasp}%</span>]"
+  fi
+  if [ $NO_UV = 0 ]
+  then
+    if [ $NO_GPS = 0 ] || [ $NO_TEMP = 0 ] || [ $NO_IAQ = 0 ]
+    then
+      echo -n " · "
+    fi
+    echo -n "󱟾 ${ulvi} [<span color='#aaaaaa'>${visb}lm</span>]"
+  fi
+  echo -n "\", \"tooltip\": \"\", \"alt\": \"\", \"class\": \"\" }"
 else
   echo -n ""
 fi
