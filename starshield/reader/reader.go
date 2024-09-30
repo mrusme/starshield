@@ -3,18 +3,25 @@ package reader
 import (
 	"log"
 	"strings"
+	"time"
 
 	"github.com/mrusme/starshield/serialdata"
 	"go.bug.st/serial"
 )
 
 func Reader(sport string, state *serialdata.SerialData) {
+	var port serial.Port
+	var err error
 	mode := &serial.Mode{
 		BaudRate: 115200,
 	}
-	port, err := serial.Open(sport, mode)
-	if err != nil {
-		log.Fatal(err)
+
+	for {
+		port, err = serial.Open(sport, mode)
+		if err == nil {
+			break
+		}
+		time.Sleep(30 * time.Second)
 	}
 
 	for {

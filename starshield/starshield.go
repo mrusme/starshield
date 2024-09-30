@@ -10,7 +10,6 @@ import (
 
 	"github.com/mrusme/starshield/reader"
 	"github.com/mrusme/starshield/serialdata"
-	"go.bug.st/serial"
 )
 
 var STATE serialdata.SerialData
@@ -72,27 +71,6 @@ func main() {
 	}
 
 	sport := os.Args[1]
-
-	for {
-		ports, err := serial.GetPortsList()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if len(ports) > 0 {
-			sportFound := false
-			for _, port := range ports {
-				if port == sport {
-					sportFound = true
-				}
-			}
-			if sportFound {
-				break
-			}
-		}
-
-		time.Sleep(10 * time.Second)
-	}
 
 	STATE = serialdata.SerialData{}
 
